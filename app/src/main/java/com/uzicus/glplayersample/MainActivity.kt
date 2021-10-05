@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
         filePickerImpl.detach()
     }
 
-    private fun VideoProcessingGLSurfaceView.applyVideoEffect(effectType: EffectType) {
+    private fun VideoProcessingGLSurfaceView.applyVideoEffect(effectType: EffectType?) {
         val videoEffect: VideoEffect = when (effectType) {
             else -> null
         } ?: return
