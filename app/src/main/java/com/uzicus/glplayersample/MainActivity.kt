@@ -12,6 +12,7 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.uzicus.glplayersample.databinding.ActivityMainBinding
 import com.uzicus.glplayersample.file.FilePickerImpl
 import com.uzicus.glplayersample.processing.VideoProcessingGLSurfaceView
+import com.uzicus.glplayersample.processing.effects.TranslucentVideoEffect
 import com.uzicus.glplayersample.processing.effects.VideoEffect
 
 class MainActivity : AppCompatActivity() {
@@ -68,6 +69,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun VideoProcessingGLSurfaceView.applyVideoEffect(effectType: EffectType) {
         val videoEffect: VideoEffect = when (effectType) {
+            EffectType.TRANSLUCENT -> TranslucentVideoEffect(applicationContext)
             else -> null
         } ?: return
         setVideoEffect(videoEffect)
