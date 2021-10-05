@@ -42,10 +42,9 @@ class VideoProcessingGLSurfaceView(
                 redSize = 8,
                 greenSize = 8,
                 blueSize = 8,
-                alphaSize = 0
+                alphaSize = 8
             )
         )
-        holder.setFormat(PixelFormat.RGBA_8888)
         setRenderer(renderer)
         renderMode = RENDERMODE_WHEN_DIRTY
     }
@@ -63,6 +62,9 @@ class VideoProcessingGLSurfaceView(
 
     fun setVideoEffect(videoEffect: VideoEffect) {
         renderer.setVideoEffect(videoEffect)
+        holder.setFormat(videoEffect.pixelFormat)
+        setZOrderOnTop(PixelFormat.formatHasAlpha(videoEffect.pixelFormat))
+
         requestRender()
         requestLayout()
     }

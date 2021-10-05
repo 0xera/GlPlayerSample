@@ -1,6 +1,7 @@
 package com.uzicus.glplayersample.processing.effects
 
 import android.content.Context
+import android.graphics.PixelFormat
 import android.opengl.GLES20
 import androidx.annotation.CallSuper
 import com.google.android.exoplayer2.util.GlUtil
@@ -25,6 +26,8 @@ abstract class BaseSimpleVideoEffect(
     private var frameTexture = -1
     private var attributes: Array<GlUtil.Attribute>? = null
     private var uniforms: Array<GlUtil.Uniform>? = null
+
+    override val pixelFormat = PixelFormat.RGB_888
 
     override fun initialize() {
         program = GlUtil.compileProgram(vertexShaderCode, fragmentShaderCode)
