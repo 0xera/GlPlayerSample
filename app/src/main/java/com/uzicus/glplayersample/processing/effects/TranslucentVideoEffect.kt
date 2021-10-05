@@ -8,6 +8,8 @@ class TranslucentVideoEffect(
     context: Context
 ): BaseSimpleVideoEffect(context) {
 
+    override val aspectFactor = 0.5F
+
     override val pixelFormat = PixelFormat.RGBA_8888
 
     override val fragmentShaderCode: String = context.assets.loadAsString("translucent.frag")

@@ -27,6 +27,8 @@ abstract class BaseSimpleVideoEffect(
     private var attributes: Array<GlUtil.Attribute>? = null
     private var uniforms: Array<GlUtil.Uniform>? = null
 
+    override val aspectFactor = 1F
+
     override val pixelFormat = PixelFormat.RGB_888
 
     override fun initialize() {

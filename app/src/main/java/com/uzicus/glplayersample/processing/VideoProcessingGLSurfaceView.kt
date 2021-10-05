@@ -26,6 +26,7 @@ class VideoProcessingGLSurfaceView(
 
     private val renderer: VideoRenderer = VideoRenderer(this::onSurfaceTextureAvailable)
 
+    private var effectAspectFactor = 1F
     private var measuredVideoAspect = 1F
 
     private var playerScaleType = ScaleType.FIT_WIDTH
@@ -64,6 +65,7 @@ class VideoProcessingGLSurfaceView(
         renderer.setVideoEffect(videoEffect)
         holder.setFormat(videoEffect.pixelFormat)
         setZOrderOnTop(PixelFormat.formatHasAlpha(videoEffect.pixelFormat))
+        effectAspectFactor = videoEffect.aspectFactor
 
         requestRender()
         requestLayout()
@@ -81,8 +83,8 @@ class VideoProcessingGLSurfaceView(
         var viewHeight = measuredHeight
 
         when (playerScaleType) {
-            ScaleType.FIT_WIDTH -> viewHeight = (measuredWidth / (measuredVideoAspect)).toInt()
-            ScaleType.FIT_HEIGHT -> viewWidth = (measuredHeight * (measuredVideoAspect)).toInt()
+            ScaleType.FIT_WIDTH -> viewHeight = (measuredWidth / (measuredVideoAspect * effectAspectFactor)).toInt()
+            ScaleType.FIT_HEIGHT -> viewWidth = (measuredHeight * (measuredVideoAspect * effectAspectFactor)).toInt()
             ScaleType.NONE -> { /* nothing */ }
         }
 

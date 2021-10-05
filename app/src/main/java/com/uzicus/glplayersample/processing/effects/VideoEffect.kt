@@ -2,6 +2,8 @@ package com.uzicus.glplayersample.processing.effects
 
 interface VideoEffect {
 
+    val aspectFactor: Float
+
     val pixelFormat: Int
 
     fun initialize()
