@@ -4,9 +4,7 @@ import android.content.Context
 import com.uzicus.glplayersample.processing.effects.shader.BaseShader
 import com.uzicus.glplayersample.utils.loadAsString
 
-class TranslucentShader(
-    context: Context
-): BaseShader() {
+class TranslucentShader(context: Context): BaseShader() {
 
     override val adjustAspect = 0.5F
 
