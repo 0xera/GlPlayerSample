@@ -1,16 +1,16 @@
 package com.uzicus.glplayersample.processing.effects
 
 import android.content.Context
-import android.graphics.PixelFormat
+import com.uzicus.glplayersample.processing.effects.shader.BaseShader
 import com.uzicus.glplayersample.utils.loadAsString
 
-class TranslucentVideoEffect(
+class TranslucentShader(
     context: Context
-): BaseSimpleVideoEffect(context) {
+): BaseShader() {
 
-    override val aspectFactor = 0.5F
+    override val adjustAspect = 0.5F
 
-    override val pixelFormat = PixelFormat.RGBA_8888
+    override val vertexShaderCode: String = context.assets.loadAsString("base.vert")
 
     override val fragmentShaderCode: String = context.assets.loadAsString("translucent.frag")
 }
