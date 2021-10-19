@@ -47,8 +47,6 @@ class PreviewShader(
     override fun setInputTexture(texture: Int, width: Int, height: Int) {
         super.setInputTexture(texture, width, height)
 
-        Matrix.setIdentityM(stMatrix, 0)
-
         // camera
         Matrix.setLookAtM(
             viewMatrix, 0,

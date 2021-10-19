@@ -96,7 +96,9 @@ class GlFrameBufferWrapper {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, saveTexName)
     }
 
-    private fun release() {
+    fun release() {
+        if (width == 0 && height == 0) return
+
         width = 0
         height = 0
 

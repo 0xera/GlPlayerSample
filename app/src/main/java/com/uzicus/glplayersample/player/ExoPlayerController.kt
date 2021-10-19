@@ -4,19 +4,19 @@ import android.content.Context
 import android.net.Uri
 import android.opengl.GLSurfaceView
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.EventLogger
-import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.video.VideoSize
+import com.uzicus.glplayersample.processing.SurfaceHolder
 import com.uzicus.glplayersample.processing.VideoRenderer
 import com.uzicus.glplayersample.processing.effects.shader.Shader
 
 class ExoPlayerController(private val context: Context): PlayerController {
 
     private var renderer: VideoRenderer? = null
+    private var surfaceHolder: SurfaceHolder? = null
     private var player: SimpleExoPlayer? = null
 
     private val dataSourceFactory = DefaultDataSourceFactory(context)
@@ -34,11 +34,6 @@ class ExoPlayerController(private val context: Context): PlayerController {
                 addAnalyticsListener(EventLogger(trackSelector))
             }
 
-        if (renderer != null) {
-            val surfaceHolder = ExoSurfaceHolder(player.videoComponent!!)
-            renderer?.setSurfaceHolder(surfaceHolder)
-        }
-
         return player
     }
 
@@ -55,19 +50,14 @@ class ExoPlayerController(private val context: Context): PlayerController {
     }
 
     override fun play(url: String) {
-        val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return
+        val uri = runCatching { Uri.parse(url) }.getOrNull() ?: error("wrong url: $url")
         val mediaItem = MediaItem.Builder().setUri(uri).build()
         val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
 
         val player = player ?: createExoPlayer().also { player = it }
+        val surfaceHolder = surfaceHolder ?: ExoSurfaceHolder(player).also { surfaceHolder = it }
 
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(Util.getAudioUsageForStreamType(C.STREAM_TYPE_MUSIC))
-            .setContentType(Util.getAudioContentTypeForStreamType(C.STREAM_TYPE_MUSIC))
-            .build()
-
-        player.setAudioAttributes(audioAttributes, false)
-        player.volume = 1F
+        renderer?.setSurfaceHolder(surfaceHolder)
 
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {

@@ -2,16 +2,15 @@ package com.uzicus.glplayersample.processing
 
 import android.graphics.SurfaceTexture
 import android.opengl.GLES11Ext
-import android.opengl.GLSurfaceView
 import android.os.Handler
 import android.os.Looper
 import android.view.Surface
 import com.uzicus.glplayersample.utils.gl.EglUtils
 import java.util.concurrent.atomic.AtomicBoolean
 
-class SurfaceTextureHolder(
+class FrameTextureHolder(
     private val stMatrix: FloatArray,
-    private val glSurfaceView: GLSurfaceView
+    private val onFrameAvailable: () -> Unit
 ) {
 
     private val mainHandler: Handler = Handler(Looper.getMainLooper())
@@ -43,7 +42,7 @@ class SurfaceTextureHolder(
         val surfaceTexture = SurfaceTexture(surfaceTextureId)
         surfaceTexture.setOnFrameAvailableListener {
             frameAvailable.set(true)
-            glSurfaceView.requestRender()
+            onFrameAvailable()
         }
 
         mainHandler.post {

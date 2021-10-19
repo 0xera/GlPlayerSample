@@ -3,6 +3,7 @@ package com.uzicus.glplayersample.processing
 import android.graphics.PixelFormat
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
+import android.opengl.Matrix
 import android.util.Size
 import androidx.core.util.component1
 import androidx.core.util.component2
@@ -24,15 +25,20 @@ internal class VideoRenderer(
 
     private val frameStMatrix = FloatArray(16)
 
-    private val surfaceTextureHolder = SurfaceTextureHolder(frameStMatrix, glSurfaceView)
+    private val frameTextureHolder = FrameTextureHolder(frameStMatrix, onFrameAvailable = {
+        glSurfaceView.requestRender()
+    })
+
     private val frameBuffer = GlFrameBufferWrapper()
     private val framePreviewShader = PreviewShader(frameStMatrix)
 
     private var activeShader: Shader? = null
 
-    private var playerScaleType = ScaleType.FIT_WIDTH
+    private var scaleType = ScaleType.FIT_WIDTH
     private var surfaceWidth = -1
     private var surfaceHeight = -1
+    private var frameWidth = -1
+    private var frameHeight = -1
     private var videoAspect: Float = 1F
 
     private val isSizeChanged = AtomicBoolean(false)
@@ -54,7 +60,7 @@ internal class VideoRenderer(
             )
             setRenderer(this@VideoRenderer)
             renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
-            doOnDetach { surfaceTextureHolder.release() }
+            doOnDetach { frameTextureHolder.release() }
         }
     }
 
@@ -73,11 +79,11 @@ internal class VideoRenderer(
     }
 
     fun setSurfaceHolder(newSurfaceHolder: SurfaceHolder) {
-        surfaceTextureHolder.setSurfaceHolder(newSurfaceHolder)
+        frameTextureHolder.setSurfaceHolder(newSurfaceHolder)
     }
 
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        surfaceTextureHolder.onGlSurfaceCreated()
+        frameTextureHolder.onGlSurfaceCreated()
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
@@ -87,7 +93,9 @@ internal class VideoRenderer(
     }
 
     override fun onDrawFrame(gl: GL10) {
-        val frameTexture = surfaceTextureHolder.queryFrameTexture()
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+
+        val frameTexture = frameTextureHolder.queryFrameTexture()
 
         if (isEffectInitialized.compareAndSet(false, true)) {
             activeShader?.initialize()
@@ -104,17 +112,25 @@ internal class VideoRenderer(
 
             GLES20.glViewport(xOffset, yOffset, width, height)
 
-            framePreviewShader.setInputTexture(frameTexture, width, height)
             frameBuffer.setup(width, height)
+            frameWidth = width
+            frameHeight = height
         }
 
-        if (activeShader != null) {
-            frameBuffer.recordFrame { framePreviewShader.draw() }
+        if (frameWidth == -1 || frameHeight == -1) return
 
-            activeShader?.setInputTexture(frameBuffer.texName, frameBuffer.width, frameBuffer.height)
+        if (activeShader != null) {
+            frameBuffer.recordFrame {
+                framePreviewShader.setInputTexture(frameTexture, frameWidth, frameHeight)
+                framePreviewShader.draw()
+            }
+            activeShader?.setInputTexture(frameBuffer.texName, frameWidth, frameHeight)
             activeShader?.draw()
         } else {
-            framePreviewShader.setInputTexture(frameBuffer.texName, frameBuffer.width, frameBuffer.height)
+            frameBuffer.release()
+            Matrix.setIdentityM(frameStMatrix, 0)
+
+            framePreviewShader.setInputTexture(frameTexture, frameWidth, frameHeight)
             framePreviewShader.draw()
         }
     }
@@ -125,7 +141,7 @@ internal class VideoRenderer(
         var height = surfaceHeight
         var width = surfaceWidth
 
-        when (playerScaleType) {
+        when (scaleType) {
             ScaleType.FIT_WIDTH -> height = (surfaceWidth / aspectRatio).toInt()
             ScaleType.FIT_HEIGHT -> width = (surfaceHeight * aspectRatio).toInt()
             ScaleType.NONE -> { /* nothing */ }
