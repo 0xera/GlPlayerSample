@@ -54,7 +54,7 @@ class MainActivity : AppCompatActivity() {
             val shader = when (type) {
                 EffectType.CHROMA_KEY -> ChromaKeyShader(applicationContext)
                 EffectType.TRANSLUCENT -> TranslucentShader(applicationContext)
-                EffectType.OVERLAY -> TranslucentOverlayShader(applicationContext, assets.loadAsBitmap("avatar.jpg"))
+                EffectType.OVERLAY -> TranslucentOverlayShader(applicationContext, assets.loadAsBitmap("king.png"))
                 else -> null
             }
             playerController.applyShader(shader)

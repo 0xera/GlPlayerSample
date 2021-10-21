@@ -43,7 +43,6 @@ abstract class BaseShader: Shader {
     }
 
     override fun draw() {
-        // Run the shader program.
         GLES20.glUseProgram(program)
 
         for (attribute in attributes.orEmpty()) {
@@ -56,6 +55,7 @@ abstract class BaseShader: Shader {
         }
 
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+        // Run the shader program because GLES20.glUseProgram.
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP,  /* first= */0,  /* count= */4)
         EglUtils.checkGlError()
     }
@@ -70,7 +70,7 @@ abstract class BaseShader: Shader {
                      1.0f, -1.0f, 0.0f, 1.0f,
                     -1.0f,  1.0f, 0.0f, 1.0f,
                      1.0f,  1.0f, 0.0f, 1.0f
-                ), 4
+                ), 4 // ====> vec4
             )
             ATTRIBUTE_TEXTURE_COORDINATE_NAME -> attribute.setBuffer(
                 floatArrayOf(
@@ -79,7 +79,7 @@ abstract class BaseShader: Shader {
                      1.0f,  1.0f,
                      0.0f,  0.0f,
                      1.0f,  0.0f
-                ), 2
+                ), 2 // ====> vec2
             )
         }
     }
