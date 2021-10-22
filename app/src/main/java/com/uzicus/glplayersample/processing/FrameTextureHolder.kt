@@ -30,8 +30,7 @@ class FrameTextureHolder(
             surfaceHolder?.clearSurface(previousSurface)
             newSurfaceHolder.setSurface(previousSurface)
         } else {
-            val newSurface = Surface(surfaceTexture)
-            newSurfaceHolder.setSurface(newSurface)
+            newSurfaceHolder.setSurface(Surface(surfaceTexture))
         }
 
         surfaceHolder = newSurfaceHolder
@@ -40,16 +39,17 @@ class FrameTextureHolder(
     // call only from Gl Thread
     fun onGlSurfaceCreated() {
         surfaceTextureId = EglUtils.createTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
-        surfaceTexture = SurfaceTexture(surfaceTextureId)
-        surfaceTexture?.setOnFrameAvailableListener {
+        val surfaceTexture = SurfaceTexture(surfaceTextureId)
+        surfaceTexture.setOnFrameAvailableListener {
             frameAvailable.set(true)
             onFrameAvailable()
         }
 
         mainHandler.post {
             release()
-            val newSurface = Surface(surfaceTexture)
-            surfaceHolder?.setSurface(newSurface)
+
+            this.surfaceTexture = surfaceTexture
+            surfaceHolder?.setSurface(Surface(surfaceTexture))
         }
     }
 
