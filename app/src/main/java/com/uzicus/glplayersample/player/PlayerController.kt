@@ -1,6 +1,6 @@
 package com.uzicus.glplayersample.player
 
-import android.opengl.GLSurfaceView
+import com.uzicus.glplayersample.GLTextureView
 import com.uzicus.glplayersample.processing.effects.shader.Shader
 
 interface PlayerController {
@@ -9,7 +9,7 @@ interface PlayerController {
 
     fun pauseOrResume()
 
-    fun attachGlSurfaceView(glSurfaceView: GLSurfaceView)
+    fun attachGlTextureView(glTextureView: GLTextureView)
 
     fun applyShader(shader: Shader?)
 

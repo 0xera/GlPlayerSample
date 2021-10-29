@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
             )
         }
 
-        playerController.attachGlSurfaceView(viewBinding.glSurfaceView)
+        playerController.attachGlTextureView(viewBinding.glTextureView)
 
         viewModel.selectedEffect.observe(this) { type ->
             val shader = when (type) {

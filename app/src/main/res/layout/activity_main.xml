@@ -14,9 +14,17 @@
     </data>
 
     <FrameLayout
+        android:id="@+id/containerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
+
+        <com.uzicus.glplayersample.GLTextureView
+            android:id="@+id/glTextureView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:translationZ="100dp"
+            tools:foreground="#33000000"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/contentLayout"
@@ -55,7 +63,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/chooseButton"
-                app:selectedItemPosition="@{viewModel.onGiftTypeSelected}"
+                app:selectedItemPosition="@{viewModel.onEffectTypeSelected}"
                 tools:listitem="123" />
 
             <com.google.android.material.button.MaterialButton
@@ -81,12 +89,6 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/playButton" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
-        <android.opengl.GLSurfaceView
-            android:id="@+id/glSurfaceView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:visibility="gone"/>
 
     </FrameLayout>
 </layout>

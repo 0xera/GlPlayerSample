@@ -2,13 +2,13 @@ package com.uzicus.glplayersample.player
 
 import android.content.Context
 import android.net.Uri
-import android.opengl.GLSurfaceView
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.EventLogger
 import com.google.android.exoplayer2.video.VideoSize
+import com.uzicus.glplayersample.GLTextureView
 import com.uzicus.glplayersample.processing.SurfaceHolder
 import com.uzicus.glplayersample.processing.VideoRenderer
 import com.uzicus.glplayersample.processing.effects.shader.Shader
@@ -37,8 +37,8 @@ class ExoPlayerController(private val context: Context): PlayerController {
         return player
     }
 
-    override fun attachGlSurfaceView(glSurfaceView: GLSurfaceView) {
-        renderer = VideoRenderer(glSurfaceView)
+    override fun attachGlTextureView(glTextureView: GLTextureView) {
+        renderer = VideoRenderer(glTextureView)
     }
 
     override fun applyShader(shader: Shader?) {

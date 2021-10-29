@@ -1,32 +1,29 @@
 package com.uzicus.glplayersample.processing
 
-import android.graphics.PixelFormat
 import android.opengl.GLES20
-import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Size
 import androidx.core.util.component1
 import androidx.core.util.component2
 import androidx.core.view.doOnDetach
+import com.uzicus.glplayersample.GLTextureView
 import com.uzicus.glplayersample.processing.effects.shader.PreviewShader
 import com.uzicus.glplayersample.processing.effects.shader.Shader
-import com.uzicus.glplayersample.processing.setup.AppEGLConfigChooser
-import com.uzicus.glplayersample.processing.setup.AppEGLContextFactory
 import com.uzicus.glplayersample.utils.gl.GlFrameBufferWrapper
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 internal class VideoRenderer(
-    private val glSurfaceView: GLSurfaceView
-) : GLSurfaceView.Renderer {
+    private val glTextureView: GLTextureView
+) : GLTextureView.Renderer {
 
     enum class ScaleType { FIT_WIDTH, FIT_HEIGHT, NONE }
 
     private val frameStMatrix = FloatArray(16)
 
     private val frameTextureHolder = FrameTextureHolder(frameStMatrix, onFrameAvailable = {
-        glSurfaceView.requestRender()
+        glTextureView.requestRender()
     })
 
     private val frameBuffer = GlFrameBufferWrapper()
@@ -46,20 +43,17 @@ internal class VideoRenderer(
     private val isEffectInitialized = AtomicBoolean(false)
 
     init {
-        glSurfaceView.holder.setFormat(PixelFormat.RGBA_8888)
-        glSurfaceView.apply {
-            setZOrderOnTop(true)
-            setEGLContextFactory(AppEGLContextFactory())
+        glTextureView.isOpaque = false
+        glTextureView.apply {
+            setEGLContextClientVersion(2)
             setEGLConfigChooser(
-                AppEGLConfigChooser(
-                    redSize = 8,
-                    greenSize = 8,
-                    blueSize = 8,
-                    alphaSize = 8
-                )
+                redSize = 8,
+                greenSize = 8,
+                blueSize = 8,
+                alphaSize = 8
             )
             setRenderer(this@VideoRenderer)
-            renderMode = GLSurfaceView.RENDERMODE_WHEN_DIRTY
+            setRenderMode(GLTextureView.RENDERMODE_WHEN_DIRTY)
             doOnDetach { frameTextureHolder.release() }
         }
     }
@@ -70,7 +64,7 @@ internal class VideoRenderer(
         isEffectInitialized.set(false)
         isSizeChanged.set(true)
 
-        glSurfaceView.requestRender()
+        glTextureView.requestRender()
     }
 
     fun onVideoAspectChanged(videoAspect: Float) {
@@ -93,6 +87,7 @@ internal class VideoRenderer(
     }
 
     override fun onDrawFrame(gl: GL10) {
+        GLES20.glClearColor(0F, 0F, 0F, 0F)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
         val frameTexture = frameTextureHolder.queryFrameTexture()
