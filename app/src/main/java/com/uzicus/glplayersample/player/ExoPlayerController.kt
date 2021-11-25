@@ -1,24 +1,23 @@
-package com.uzicus.glplayersample
+package com.uzicus.glplayersample.player
 
 import android.content.Context
 import android.net.Uri
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
 import com.google.android.exoplayer2.util.EventLogger
-import com.google.android.exoplayer2.util.Util
 import com.google.android.exoplayer2.video.VideoSize
+import com.uzicus.glplayersample.GLTextureView
+import com.uzicus.glplayersample.processing.SurfaceHolder
+import com.uzicus.glplayersample.processing.VideoRenderer
+import com.uzicus.glplayersample.processing.effects.shader.Shader
 
-class PlayerController(private val context: Context) {
+class ExoPlayerController(private val context: Context): PlayerController {
 
-    interface VideoSizeChangeListener {
-        fun onVideoSizeChanged(height: Int, width: Int, pixelWidthHeightRatio: Float)
-    }
-
+    private var renderer: VideoRenderer? = null
+    private var surfaceHolder: SurfaceHolder? = null
     private var player: SimpleExoPlayer? = null
-    private var videoSizeChangeListener: VideoSizeChangeListener? = null
 
     private val dataSourceFactory = DefaultDataSourceFactory(context)
     private val mediaSourceFactory = ProgressiveMediaSource.Factory(dataSourceFactory)
@@ -26,31 +25,27 @@ class PlayerController(private val context: Context) {
     private val isPlaying: Boolean
         get() = player?.playWhenReady == true && player?.playbackState != Player.STATE_ENDED && player?.playbackState != Player.STATE_IDLE
 
-    val videoComponent: ExoPlayer.VideoComponent?
-        get() = player?.videoComponent
-
-    fun setVideoSizeChangeListener(videoSizeChangeListener: VideoSizeChangeListener) {
-        this.videoSizeChangeListener = videoSizeChangeListener
+    override fun attachGlTextureView(glTextureView: GLTextureView) {
+        renderer = VideoRenderer(glTextureView)
     }
 
-    fun pauseOrResume() {
+    override fun applyShader(shader: Shader?) {
+        renderer?.setShader(shader)
+    }
+
+    override fun pauseOrResume() {
         player?.playWhenReady = isPlaying.not()
     }
 
-    fun play(url: String) {
-        val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return
+    override fun play(url: String) {
+        val uri = runCatching { Uri.parse(url) }.getOrNull() ?: error("wrong url: $url")
         val mediaItem = MediaItem.Builder().setUri(uri).build()
         val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
 
         val player = player ?: createExoPlayer().also { player = it }
 
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(Util.getAudioUsageForStreamType(C.STREAM_TYPE_MUSIC))
-            .setContentType(Util.getAudioContentTypeForStreamType(C.STREAM_TYPE_MUSIC))
-            .build()
-
-        player.setAudioAttributes(audioAttributes, false)
-        player.volume = 1F
+        val surfaceHolder = surfaceHolder ?: ExoSurfaceHolder(player).also { surfaceHolder = it }
+        renderer?.setSurfaceHolder(surfaceHolder)
 
         player.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(state: Int) {
@@ -72,11 +67,8 @@ class PlayerController(private val context: Context) {
             }
 
             override fun onVideoSizeChanged(videoSize: VideoSize) {
-                videoSizeChangeListener?.onVideoSizeChanged(
-                    videoSize.height,
-                    videoSize.width,
-                    videoSize.pixelWidthHeightRatio
-                )
+                val videoAspect = videoSize.width.toFloat() / videoSize.height * videoSize.pixelWidthHeightRatio
+                renderer?.onVideoAspectChanged(videoAspect)
             }
         })
 
@@ -88,10 +80,12 @@ class PlayerController(private val context: Context) {
     private fun createExoPlayer(): SimpleExoPlayer {
         val trackSelector = DefaultTrackSelector(context)
 
-        return SimpleExoPlayer.Builder(context)
+        val player = SimpleExoPlayer.Builder(context)
             .setTrackSelector(trackSelector)
             .build().apply {
                 addAnalyticsListener(EventLogger(trackSelector))
             }
+
+        return player
     }
 }

@@ -42,7 +42,7 @@ class MainViewModel(
         _pauseResume.postValue(Unit)
     }
 
-    fun onGiftTypeSelected(typePosition: Int) {
+    fun onEffectTypeSelected(typePosition: Int) {
         val type = EffectType.values()[typePosition]
         _selectedEffect.postValue(type)
     }

@@ -1,77 +1,148 @@
 package com.uzicus.glplayersample.processing
 
-import android.graphics.SurfaceTexture
-import android.opengl.GLES11Ext
 import android.opengl.GLES20
-import android.opengl.GLSurfaceView
-import android.util.Log
-import com.uzicus.glplayersample.processing.effects.VideoEffect
-import com.uzicus.glplayersample.utils.EglUtils
+import android.opengl.Matrix
+import android.util.Size
+import androidx.core.util.component1
+import androidx.core.util.component2
+import androidx.core.view.doOnDetach
+import com.uzicus.glplayersample.GLTextureView
+import com.uzicus.glplayersample.processing.effects.shader.ExtTextureShader
+import com.uzicus.glplayersample.processing.effects.shader.Shader
+import com.uzicus.glplayersample.utils.gl.GlFrameBufferWrapper
 import java.util.concurrent.atomic.AtomicBoolean
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 internal class VideoRenderer(
-    private val onSurfaceTextureAvailable: (SurfaceTexture) -> Unit
-) : GLSurfaceView.Renderer {
+    private val glTextureView: GLTextureView
+) : GLTextureView.Renderer {
 
-    companion object {
-        private const val TAG = "VideoRenderer"
+    enum class ScaleType { FIT_WIDTH, FIT_HEIGHT, NONE }
+
+    private val frameStMatrix = FloatArray(16)
+
+    private val frameTextureHolder = FrameTextureHolder(frameStMatrix, onFrameAvailable = {
+        glTextureView.requestRender()
+    })
+
+    private val frameBuffer = GlFrameBufferWrapper()
+    private val extTextureShader = ExtTextureShader(frameStMatrix)
+
+    private var activeShader: Shader? = null
+
+    private var scaleType = ScaleType.FIT_WIDTH
+    private var surfaceWidth = -1
+    private var surfaceHeight = -1
+    private var frameWidth = -1
+    private var frameHeight = -1
+    private var videoAspect: Float = 1F
+
+    private val isSizeChanged = AtomicBoolean(false)
+    private val isPreviewInitialized = AtomicBoolean()
+    private val isEffectInitialized = AtomicBoolean(false)
+
+    init {
+        glTextureView.apply {
+            isOpaque = false
+            setEGLContextClientVersion(2)
+            setEGLConfigChooser(
+                redSize = 8,
+                greenSize = 8,
+                blueSize = 8,
+                alphaSize = 8
+            )
+            setRenderer(this@VideoRenderer)
+            setRenderMode(GLTextureView.RENDERMODE_WHEN_DIRTY)
+            doOnDetach { frameTextureHolder.release() }
+        }
     }
 
-    private var videoEffect: VideoEffect? = null
+    fun setShader(newShader: Shader?) {
+        activeShader = newShader
 
-    private val frameAvailable: AtomicBoolean = AtomicBoolean()
-    private var texture = 0
-    private var surfaceTexture: SurfaceTexture? = null
-    private var isInitialized = false
-    private var width: Int = -1
-    private var height: Int = -1
+        isEffectInitialized.set(false)
+        isSizeChanged.set(true)
 
-    fun setVideoEffect(newVideoEffect: VideoEffect?) {
-        videoEffect = newVideoEffect
-        isInitialized = false
+        glTextureView.requestRender()
     }
 
-    fun onFrameAvailable() {
-        frameAvailable.set(true)
+    fun onVideoAspectChanged(videoAspect: Float) {
+        this.videoAspect = videoAspect
+        isSizeChanged.set(true)
     }
 
-    @Synchronized
+    fun setSurfaceHolder(newSurfaceHolder: SurfaceHolder) {
+        frameTextureHolder.setSurfaceHolder(newSurfaceHolder)
+    }
+
     override fun onSurfaceCreated(gl: GL10, config: EGLConfig) {
-        Log.d(TAG, "onSurfaceCreated")
-
-        texture = EglUtils.createTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES)
-        surfaceTexture = SurfaceTexture(texture)
-        onSurfaceTextureAvailable(surfaceTexture!!)
+        frameTextureHolder.onGlSurfaceCreated()
     }
 
     override fun onSurfaceChanged(gl: GL10, width: Int, height: Int) {
-        Log.d(TAG, "onSurfaceChanged: width: $width, height: $height")
-
-        GLES20.glViewport(0, 0, width, height)
-        this.width = width
-        this.height = height
+        surfaceWidth = width
+        surfaceHeight = height
+        isSizeChanged.set(true)
     }
 
     override fun onDrawFrame(gl: GL10) {
-        Log.d(TAG, "onDrawFrame")
+        GLES20.glClearColor(0F, 0F, 0F, 0F)
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
 
-        val videoProcessor = videoEffect ?: return
+        val frameTexture = frameTextureHolder.queryFrameTexture()
 
-        if (!isInitialized) {
-            videoProcessor.initialize()
-            isInitialized = true
+        if (isEffectInitialized.compareAndSet(false, true)) {
+            activeShader?.initialize()
         }
-        if (width != -1 && height != -1) {
-            videoProcessor.setSurfaceSize(width, height)
-            width = -1
-            height = -1
+
+        if (isPreviewInitialized.compareAndSet(false, true)) {
+            extTextureShader.initialize()
         }
-        if (frameAvailable.compareAndSet(true, false)) {
-            surfaceTexture?.updateTexImage()
+
+        if (isSizeChanged.compareAndSet(true, false)) {
+            val (width, height) = measureSize()
+            val yOffset = (surfaceHeight - height) / 2
+            val xOffset = (surfaceWidth - width) / 2
+
+            GLES20.glViewport(xOffset, yOffset, width, height)
+
+            frameBuffer.setup(width, height)
+            frameWidth = width
+            frameHeight = height
         }
-        videoProcessor.draw(texture, surfaceTexture?.timestamp ?: 0)
+
+        if (frameWidth == -1 || frameHeight == -1) return
+
+        if (activeShader != null) {
+            frameBuffer.recordFrame {
+                extTextureShader.setInputTexture(frameTexture, frameWidth, frameHeight)
+                extTextureShader.draw()
+            }
+            activeShader?.setInputTexture(frameBuffer.texName, frameWidth, frameHeight)
+            activeShader?.draw()
+        } else {
+            frameBuffer.release()
+            Matrix.setIdentityM(frameStMatrix, 0)
+
+            extTextureShader.setInputTexture(frameTexture, frameWidth, frameHeight)
+            extTextureShader.draw()
+        }
+    }
+
+    private fun measureSize(): Size {
+        val aspectRatio = videoAspect * (activeShader?.adjustAspect ?: 1F)
+
+        var height = surfaceHeight
+        var width = surfaceWidth
+
+        when (scaleType) {
+            ScaleType.FIT_WIDTH -> height = (surfaceWidth / aspectRatio).toInt()
+            ScaleType.FIT_HEIGHT -> width = (surfaceHeight * aspectRatio).toInt()
+            ScaleType.NONE -> { /* nothing */ }
+        }
+
+        return Size(width, height)
     }
 
 }

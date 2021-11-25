@@ -13,77 +13,81 @@
 
     </data>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <FrameLayout
+        android:id="@+id/containerLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/chooseButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:onClick="@{() -> viewModel.onChooseClicks()}"
-            android:text="Choose"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
-
-        <TextView
-            android:id="@+id/filePathText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:onClick="@{() -> viewModel.onChooseClicks()}"
-            android:padding="16dp"
-            android:text="@{viewModel.fileName}"
-            app:layout_constraintBottom_toBottomOf="@+id/chooseButton"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/chooseButton"
-            app:layout_constraintTop_toTopOf="@+id/chooseButton"
-            tools:text="/tmp/video.ts" />
-
-        <androidx.appcompat.widget.AppCompatSpinner
-            android:id="@+id/typeSpinner"
+        <com.uzicus.glplayersample.GLTextureView
+            android:id="@+id/glTextureView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:entries="@{viewModel.effects}"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/chooseButton"
-            app:selectedItemPosition="@{viewModel.onGiftTypeSelected}"
-            tools:listitem="123" />
+            android:layout_height="match_parent"
+            android:translationZ="100dp"/>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/playButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:enabled="@{viewModel.isPlayButtonEnabled}"
-            android:onClick="@{() -> viewModel.onPlayClicks()}"
-            android:text="PLAY"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/typeSpinner" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/contentLayout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/pauseResumeButton"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            android:onClick="@{() -> viewModel.onPauseResumeClicks()}"
-            android:text="PAUSE/RESUME"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/playButton" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chooseButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:onClick="@{() -> viewModel.onChooseClicks()}"
+                android:text="@string/choose"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-        <com.uzicus.glplayersample.processing.VideoProcessingGLSurfaceView
-            android:id="@+id/glSurfaceView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            <TextView
+                android:id="@+id/filePathText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:onClick="@{() -> viewModel.onChooseClicks()}"
+                android:padding="16dp"
+                android:text="@{viewModel.fileName}"
+                app:layout_constraintBottom_toBottomOf="@+id/chooseButton"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/chooseButton"
+                app:layout_constraintTop_toTopOf="@+id/chooseButton"
+                tools:text="/tmp/video.ts" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.appcompat.widget.AppCompatSpinner
+                android:id="@+id/typeSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:entries="@{viewModel.effects}"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/chooseButton"
+                app:selectedItemPosition="@{viewModel.onEffectTypeSelected}"
+                tools:listitem="123" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/playButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:enabled="@{viewModel.isPlayButtonEnabled}"
+                android:onClick="@{() -> viewModel.onPlayClicks()}"
+                android:text="@string/play"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/typeSpinner" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/pauseResumeButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_margin="16dp"
+                android:onClick="@{() -> viewModel.onPauseResumeClicks()}"
+                android:text="@string/pause_resume"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/playButton" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
 </layout>

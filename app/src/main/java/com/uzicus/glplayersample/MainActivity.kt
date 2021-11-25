@@ -1,23 +1,29 @@
 package com.uzicus.glplayersample
 
 import android.os.Bundle
-import android.view.Surface
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.updatePadding
 import androidx.databinding.DataBindingUtil
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.google.android.exoplayer2.ExoPlayer
 import com.uzicus.glplayersample.databinding.ActivityMainBinding
 import com.uzicus.glplayersample.file.FilePickerImpl
-import com.uzicus.glplayersample.processing.VideoProcessingGLSurfaceView
-import com.uzicus.glplayersample.processing.effects.VideoEffect
+import com.uzicus.glplayersample.player.ExoPlayerController
+import com.uzicus.glplayersample.player.PlayerController
+import com.uzicus.glplayersample.processing.effects.TranslucentOverlayShader
+import com.uzicus.glplayersample.processing.effects.TranslucentShader
+import com.uzicus.glplayersample.utils.doOnApplyWindowInsets
+import com.uzicus.glplayersample.utils.loadAsBitmap
+import com.uzicus.glplayersample.utils.statusBarHeight
 
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels {
         object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                 return MainViewModel(filePickerImpl) as T
             }
@@ -25,7 +31,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val filePickerImpl by lazy { FilePickerImpl(this) }
-    private val playerController by lazy { PlayerController(applicationContext) }
+    private val playerController: PlayerController by lazy { ExoPlayerController(applicationContext) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,21 +40,26 @@ class MainActivity : AppCompatActivity() {
         viewBinding.lifecycleOwner = this
         viewBinding.viewModel = viewModel
 
-        playerController.setVideoSizeChangeListener(object : PlayerController.VideoSizeChangeListener {
-            override fun onVideoSizeChanged(height: Int, width: Int, pixelWidthHeightRatio: Float) {
-                val measuredVideoAspect = width.toFloat() / height * pixelWidthHeightRatio
-                viewBinding.glSurfaceView.onVideoAspectChanged(measuredVideoAspect)
-            }
-        })
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        viewBinding.contentLayout.doOnApplyWindowInsets { initialPadding ->
+            viewBinding.contentLayout.updatePadding(
+                top = initialPadding.top + statusBarHeight
+            )
+        }
 
-        viewModel.selectedEffect.observe(this) { effect ->
-            viewBinding.glSurfaceView.applyVideoEffect(effect)
+        playerController.attachGlTextureView(viewBinding.glTextureView)
+
+        viewModel.selectedEffect.observe(this) { type ->
+            val shader = when (type) {
+                EffectType.TRANSLUCENT -> TranslucentShader(applicationContext)
+                EffectType.OVERLAY -> TranslucentOverlayShader(applicationContext, assets.loadAsBitmap("overlay/king.png"))
+                else -> null
+            }
+            playerController.applyShader(shader)
         }
 
         viewModel.play.observe(this) { url ->
             playerController.play(url)
-            val videoComponent = playerController.videoComponent ?: return@observe
-            viewBinding.glSurfaceView.setSurfaceListener(ExoSurfaceHolder(videoComponent))
         }
 
         viewModel.pauseResume.observe(this) {
@@ -65,24 +76,4 @@ class MainActivity : AppCompatActivity() {
 
         filePickerImpl.detach()
     }
-
-    private fun VideoProcessingGLSurfaceView.applyVideoEffect(effectType: EffectType?) {
-        val videoEffect: VideoEffect = when (effectType) {
-            else -> null
-        } ?: return
-        setVideoEffect(videoEffect)
-    }
-
-    private class ExoSurfaceHolder(
-        private val videoComponent: ExoPlayer.VideoComponent
-    ): VideoProcessingGLSurfaceView.SurfaceListener {
-        override fun clearVideoSurface(surface: Surface?) {
-            videoComponent.clearVideoSurface(surface)
-        }
-
-        override fun setVideoSurface(surface: Surface?) {
-            videoComponent.setVideoSurface(surface)
-        }
-    }
-
 }
