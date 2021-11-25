@@ -4,7 +4,7 @@ import android.opengl.Matrix
 import com.uzicus.glplayersample.utils.gl.GlShaderUniform
 import com.uzicus.glplayersample.utils.gl.GlShaderUniform.Companion.bind
 
-class PreviewShader(
+class ExtTextureShader(
     private val stMatrix: FloatArray
 ): BaseShader() {
 

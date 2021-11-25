@@ -23,8 +23,7 @@
             android:id="@+id/glTextureView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:translationZ="100dp"
-            tools:foreground="#33000000"/>
+            android:translationZ="100dp"/>
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/contentLayout"

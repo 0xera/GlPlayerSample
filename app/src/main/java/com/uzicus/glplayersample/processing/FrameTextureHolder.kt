@@ -53,11 +53,6 @@ class FrameTextureHolder(
         }
     }
 
-    fun release() {
-        surfaceTexture?.release()
-        surfaceHolder?.release()
-    }
-
     fun queryFrameTexture(): Int {
         if (frameAvailable.compareAndSet(true, false)) {
             surfaceTexture?.updateTexImage()
@@ -65,6 +60,11 @@ class FrameTextureHolder(
         }
 
         return surfaceTextureId
+    }
+
+    fun release() {
+        surfaceTexture?.release()
+        surfaceHolder?.release()
     }
 
 }

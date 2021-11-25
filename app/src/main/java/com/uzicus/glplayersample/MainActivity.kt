@@ -13,7 +13,6 @@ import com.uzicus.glplayersample.databinding.ActivityMainBinding
 import com.uzicus.glplayersample.file.FilePickerImpl
 import com.uzicus.glplayersample.player.ExoPlayerController
 import com.uzicus.glplayersample.player.PlayerController
-import com.uzicus.glplayersample.processing.effects.ChromaKeyShader
 import com.uzicus.glplayersample.processing.effects.TranslucentOverlayShader
 import com.uzicus.glplayersample.processing.effects.TranslucentShader
 import com.uzicus.glplayersample.utils.doOnApplyWindowInsets
@@ -52,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.selectedEffect.observe(this) { type ->
             val shader = when (type) {
-                EffectType.CHROMA_KEY -> ChromaKeyShader(applicationContext)
                 EffectType.TRANSLUCENT -> TranslucentShader(applicationContext)
                 EffectType.OVERLAY -> TranslucentOverlayShader(applicationContext, assets.loadAsBitmap("overlay/king.png"))
                 else -> null

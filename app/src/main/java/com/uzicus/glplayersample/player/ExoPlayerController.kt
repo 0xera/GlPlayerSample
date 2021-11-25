@@ -25,18 +25,6 @@ class ExoPlayerController(private val context: Context): PlayerController {
     private val isPlaying: Boolean
         get() = player?.playWhenReady == true && player?.playbackState != Player.STATE_ENDED && player?.playbackState != Player.STATE_IDLE
 
-    private fun createExoPlayer(): SimpleExoPlayer {
-        val trackSelector = DefaultTrackSelector(context)
-
-        val player = SimpleExoPlayer.Builder(context)
-            .setTrackSelector(trackSelector)
-            .build().apply {
-                addAnalyticsListener(EventLogger(trackSelector))
-            }
-
-        return player
-    }
-
     override fun attachGlTextureView(glTextureView: GLTextureView) {
         renderer = VideoRenderer(glTextureView)
     }
@@ -55,8 +43,8 @@ class ExoPlayerController(private val context: Context): PlayerController {
         val mediaSource = mediaSourceFactory.createMediaSource(mediaItem)
 
         val player = player ?: createExoPlayer().also { player = it }
-        val surfaceHolder = surfaceHolder ?: ExoSurfaceHolder(player).also { surfaceHolder = it }
 
+        val surfaceHolder = surfaceHolder ?: ExoSurfaceHolder(player).also { surfaceHolder = it }
         renderer?.setSurfaceHolder(surfaceHolder)
 
         player.addListener(object : Player.Listener {
@@ -87,5 +75,17 @@ class ExoPlayerController(private val context: Context): PlayerController {
         player.playWhenReady = true
         player.setMediaSource(mediaSource)
         player.prepare()
+    }
+
+    private fun createExoPlayer(): SimpleExoPlayer {
+        val trackSelector = DefaultTrackSelector(context)
+
+        val player = SimpleExoPlayer.Builder(context)
+            .setTrackSelector(trackSelector)
+            .build().apply {
+                addAnalyticsListener(EventLogger(trackSelector))
+            }
+
+        return player
     }
 }

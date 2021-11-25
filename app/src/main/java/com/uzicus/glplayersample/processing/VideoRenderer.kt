@@ -7,7 +7,7 @@ import androidx.core.util.component1
 import androidx.core.util.component2
 import androidx.core.view.doOnDetach
 import com.uzicus.glplayersample.GLTextureView
-import com.uzicus.glplayersample.processing.effects.shader.PreviewShader
+import com.uzicus.glplayersample.processing.effects.shader.ExtTextureShader
 import com.uzicus.glplayersample.processing.effects.shader.Shader
 import com.uzicus.glplayersample.utils.gl.GlFrameBufferWrapper
 import java.util.concurrent.atomic.AtomicBoolean
@@ -27,7 +27,7 @@ internal class VideoRenderer(
     })
 
     private val frameBuffer = GlFrameBufferWrapper()
-    private val framePreviewShader = PreviewShader(frameStMatrix)
+    private val extTextureShader = ExtTextureShader(frameStMatrix)
 
     private var activeShader: Shader? = null
 
@@ -43,8 +43,8 @@ internal class VideoRenderer(
     private val isEffectInitialized = AtomicBoolean(false)
 
     init {
-        glTextureView.isOpaque = false
         glTextureView.apply {
+            isOpaque = false
             setEGLContextClientVersion(2)
             setEGLConfigChooser(
                 redSize = 8,
@@ -97,7 +97,7 @@ internal class VideoRenderer(
         }
 
         if (isPreviewInitialized.compareAndSet(false, true)) {
-            framePreviewShader.initialize()
+            extTextureShader.initialize()
         }
 
         if (isSizeChanged.compareAndSet(true, false)) {
@@ -116,8 +116,8 @@ internal class VideoRenderer(
 
         if (activeShader != null) {
             frameBuffer.recordFrame {
-                framePreviewShader.setInputTexture(frameTexture, frameWidth, frameHeight)
-                framePreviewShader.draw()
+                extTextureShader.setInputTexture(frameTexture, frameWidth, frameHeight)
+                extTextureShader.draw()
             }
             activeShader?.setInputTexture(frameBuffer.texName, frameWidth, frameHeight)
             activeShader?.draw()
@@ -125,8 +125,8 @@ internal class VideoRenderer(
             frameBuffer.release()
             Matrix.setIdentityM(frameStMatrix, 0)
 
-            framePreviewShader.setInputTexture(frameTexture, frameWidth, frameHeight)
-            framePreviewShader.draw()
+            extTextureShader.setInputTexture(frameTexture, frameWidth, frameHeight)
+            extTextureShader.draw()
         }
     }
 

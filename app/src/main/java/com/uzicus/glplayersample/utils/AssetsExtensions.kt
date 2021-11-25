@@ -26,7 +26,10 @@ fun AssetManager.loadAsBitmap(assetFileName: String): Bitmap {
 
     return try {
         inputStream = open(assetFileName)
-        BitmapFactory.decodeStream(inputStream)
+        val options = BitmapFactory.Options().apply {
+            inScaled = false
+        }
+        BitmapFactory.decodeStream(inputStream, null, options)!!
     } catch (e: IOException) {
         throw IllegalStateException(e)
     } finally {

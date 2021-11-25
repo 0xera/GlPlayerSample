@@ -53,13 +53,12 @@ void main() {
     vec4 maskColor = texture2D(uFrameTexture, vTextureCoordMask);
     vec4 maskColorByMax = texture2DByMax(uFrameTexture, vTextureCoordMask, uResolution, 1);
 
-    float contentAlpha = maskColor.r;
-    float overlayFactor = maskColorByMax.g;
-
     vec4 contentColor = texture2D(uFrameTexture, vTextureCoordContent);
-    vec4 blurOverlayMapColor = texture2DBlur(uFrameTexture, vTextureCoordOverlayMap, uResolution, 12);
+    contentColor.a = maskColor.r;
+
+    vec2 blurOverlayMapColor = texture2DBlur(uFrameTexture, vTextureCoordOverlayMap, uResolution, 12).xy;
+
     vec4 overlayColor = texture2D(uOverlayTexture, blurOverlayMapColor.rg);
 
-    gl_FragColor = mix(contentColor, overlayColor, overlayFactor);
-    gl_FragColor.a = mix(contentAlpha, 1.0, overlayFactor);
+    gl_FragColor = mix(contentColor, overlayColor, maskColorByMax.g * overlayColor.a);
 }
